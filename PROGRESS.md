@@ -109,12 +109,42 @@ aapt/apksigner/dexdump/zipfile inspection; (2) the manifest + entry-point use th
 dialect (android_main, namespaced android.jar APIs) which matches android.jar exactly but libcore was
 removed from Android 6+, so this APK targets old Android (≤5) — on modern Android use the PWA/shows.html.
 
+## GitHub Pages + Actions (2026-10-09) — self-updating without a server
+- Repo: https://github.com/17h1nk/punkshows (local git repo initialised here, branch `main`,
+  commit ae0165b, 166 files / 3.4 MB). NOT pushed yet — needs the user's token.
+- `.gitignore` excludes sdk/, tools/, .venv/, apkbuild/, .opencode/, *.log, punkshows.apk,
+  **shows.html** (4 MB base64 offline copy — local artifact only; committing it would bloat the
+  repo ~4 MB per refresh).
+- `snapshot.py --web` writes **index.html** (139 KB, 154 `src="thumbs/…"` RELATIVE refs, no
+  base64) instead of the inlined shows.html. Verified: 154 flyer blocks, 422 ♪ links.
+- `.github/workflows/refresh.yml`: cron every 6 h (+ on push to main) → pip install
+  beautifulsoup4/requests/pillow/flask → `python snapshot.py --web` → commit index.html + thumbs/
+  → `git push origin HEAD:main`. Actions runs the REAL Python scraper, so MusicBrainz/Bandcamp
+  resolution and venue sites all work server-side (no Java port needed).
+- APK rebuilt: `loadUrl` constant is now `https://17h1nk.github.io/punkshows/` (was the raw
+  source site); offline fallback still `loadData` of the bundled snapshot. 29,005 bytes, signed,
+  dex contains `17h1nk.github.io`.
+- REQUIRED FROM THE USER: repo must be **public** (confirmed 2026-10-09: `git ls-remote` asks for a
+  username, `api.github.com/users/17h1nk/repos` returns 0 public repos, and
+  https://17h1nk.github.io/punkshows/ is 404 → the repo is still private; GitHub Pages cannot serve
+  a private repo). Flip it via repo Settings → "Change repository visibility", then enable Pages.
+  - RE-CHECKED same day: repo is now **PUBLIC and EMPTY** (`git ls-remote` returns no refs; API lists
+    `punkshows`, default branch `main`). Pages still 404 because nothing has been pushed yet.
+  - origin remote added locally (`https://github.com/17h1nk/punkshows.git`). HTTPS push without
+    creds fails fast ("could not read Username for 'https://github.com'"); no gh CLI, no GITHUB_*
+    env token, no ~/.ssh key → push is the ONLY remaining blocker; the agent cannot do it.
+
 ## Next steps
 - [x] Cache fill done (PID 570): 422 bands cached, 318 resolved (248 Bandcamp, 70 official
   homepage), 104 unresolved (obscure/cover bands → fall back to bandcamp.com search link).
 - [x] Re-rendered: `shows.html` and webapp both show ♪ listen links.
 - [x] APK built: `punkshows.apk` 29,005 bytes, signed (route A; no clang needed — d8 replaced
   AOSP clang/aic/so). Still cannot be runtime-tested here (no device).
+- [ ] Push to GitHub — BLOCKED on user credentials (no token/gh/ssh key here). Repo already public
+  + empty; origin is set. User runs (token = fine-grained PAT with repo admin):
+  `git push https://17h1nk:TOKEN@github.com/17h1nk/punkshows.git main` (or `gh auth login` +
+  `git push -u origin main`), then enable Pages at /settings/pages (branch main, /). After the
+  first push, https://17h1nk.github.io/punkshows/ goes live and refresh.yml keeps it current.
 
 
 ## Usage
