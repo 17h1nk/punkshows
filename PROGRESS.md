@@ -109,6 +109,21 @@ aapt/apksigner/dexdump/zipfile inspection; (2) the manifest + entry-point use th
 dialect (android_main, namespaced android.jar APIs) which matches android.jar exactly but libcore was
 removed from Android 6+, so this APK targets old Android (≤5) — on modern Android use the PWA/shows.html.
 
+## Modern Android APK refusal + PWA install fix (2026-10-09)
+- User report: latest Android refuses to install punkshows.apk. CONFIRMED by inspection: the
+  classes.dex entry point is `android_main(android.app.Activity)` = libcore Java-app model
+  (removed from Android 6+); the APK has NO native executable → modern Android rejects it.
+  Not a signature problem. APK = Android ≤5 only; modern Android → PWA or shows.html.
+- PWA gap found: index.html (Pages build) had NO manifest/icon links → Chrome could not offer
+  a real install. Fix in snapshot.py (`--web`): (a) head now carries
+  `<link rel=icon href='icon.svg'><link rel=manifest href='manifest.webmanifest'>`;
+  (b) `pwa_files()` writes `manifest.webmanifest` (224 B) + `icon.svg` (225 B, = webapp.ICON)
+  into the repo root so Pages serves them. Manifest uses RELATIVE `start_url "./"` + icon
+  `src: "icon.svg"` — absolute "/" would point at the GitHub Pages root, not /punkshows/.
+- Regenerated 2026-10-09: index.html 139,552 B / 274 shows + the two new files.
+- ENV: system python3 lost flask and pip is PEP-668-locked → ALWAYS run via
+  `.venv/bin/python` (flask 3.1.3 installed in .venv; .venv is gitignored).
+
 ## GitHub Pages + Actions (2026-10-09) — self-updating without a server
 - Repo: https://github.com/17h1nk/punkshows (local git repo initialised here, branch `main`,
   commit ae0165b, 166 files / 3.4 MB). NOT pushed yet — needs the user's token.
