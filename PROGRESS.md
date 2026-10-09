@@ -160,6 +160,11 @@ removed from Android 6+, so this APK targets old Android (≤5) — on modern An
   verified via raw URL). Local branch `main` (b1bb14e) keeps refresh.yml in-tree and is BEHIND the
   remote (a252664 deleted it) — do NOT push main again while it contains the workflow (PAT lacks
   `workflow` scope → 403 on any commit touching workflow files).
+- [x] PUSHED #2 (2026-10-09): PWA files. Strategy change: `git rebase a252664 main` (replayed
+  commits don't touch the workflow) + refresh.yml UNTRACKED locally (copied to gitignored
+  `tools/refresh.yml`, 726 B) → plain `push main:main` now works. Remote main = `aabffbd`.
+  Verified live: manifest.webmanifest 200/224 B, icon.svg 200/225 B, index.html 200/139,552 B.
+  Future pushes from main are clean (tree has no workflow file).
 - [ ] STILL USER-ONLY (PAT lacks pages_write + workflow scopes):
   1. Enable Pages: github.com/17h1nk/punkshows/settings → Pages → Deploy: branch main, root /.
      (Pages API POST → 403 "Resource not accessible by PAT"; URL still 404.)
