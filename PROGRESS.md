@@ -140,11 +140,16 @@ removed from Android 6+, so this APK targets old Android (≤5) — on modern An
 - [x] Re-rendered: `shows.html` and webapp both show ♪ listen links.
 - [x] APK built: `punkshows.apk` 29,005 bytes, signed (route A; no clang needed — d8 replaced
   AOSP clang/aic/so). Still cannot be runtime-tested here (no device).
-- [ ] Push to GitHub — BLOCKED on user credentials (no token/gh/ssh key here). Repo already public
-  + empty; origin is set. User runs (token = fine-grained PAT with repo admin):
-  `git push https://17h1nk:TOKEN@github.com/17h1nk/punkshows.git main` (or `gh auth login` +
-  `git push -u origin main`), then enable Pages at /settings/pages (branch main, /). After the
-  first push, https://17h1nk.github.io/punkshows/ goes live and refresh.yml keeps it current.
+- [ ] Push to GitHub — BLOCKED on token scope (2026-10-09, two causes found):
+  1. user's first try used `http://` → GitHub strips creds on plain HTTP → "No anonymous write
+    access". Must be `https://`.
+  2. With https the `github_pat_…` fine-grained PAT authenticates as 17h1nk but has NO write
+    scope: push → 403 "Permission … denied", Pages API POST /pages → 403 "Resource not
+    accessible by PAT", /repositories lists no punkshows. FIX: edit token at
+    github.com/settings/personal-access-tokens → Repositories must include punkshows, Contents=Write
+    (+ Admin & Pages:Write to enable Pages by API). SECURITY: token was pasted into chat → revoke/rotate.
+  After a scoped token: `git push https://17h1nk:TOKEN@github.com/17h1nk/punkshows.git main`
+  (origin already set; token NOT stored in .git/config), then enable Pages (main, /).
 
 
 ## Usage
