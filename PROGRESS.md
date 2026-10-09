@@ -109,6 +109,73 @@ aapt/apksigner/dexdump/zipfile inspection; (2) the manifest + entry-point use th
 dialect (android_main, namespaced android.jar APIs) which matches android.jar exactly but libcore was
 removed from Android 6+, so this APK targets old Android (≤5) — on modern Android use the PWA/shows.html.
 
+## Modern Android APK — native aarch64 launcher + android_task dex: BUILT (2026-10-09)
+Goal: an APK modern Android (6+) accepts — i.e. the Android-Java *native appProcess model*
+(entry class `Main` extends global `android_task`, method `android_main(android_app.IoHandler)`)
+plus a hand-built binary AndroidManifest.xml and a hand-assembled aarch64 launcher ELF.
+
+Artifact: `punkshows-modern.apk` (8,583 B, md5 094149a095009f4fc602d407363b0765) at repo root. Contents (verified):
+AndroidManifest.xml 828 B (binary, DEFLATE) + classes.dex 672 B + `apk-launcher` 160 B
+(STORED, mode 0755, local header offset 904 → 4-byte aligned) + META-INF KEY.SF/KEY.RSA/MANIFEST.MF.
+
+DONE / VERIFIED (all by tool output, not by device):
+- [x] launcher ELF: `apkbuild2/launcher64` 160 B, hand-assembled static aarch64 ELF
+      (md5 b9f623fc414593a08ec3dfcf36600dd9). `file` → ELF 64-bit LSB executable, ARM aarch64,
+      SYSV, statically linked, no section header. `readelf -lhd`: EXEC, entry 0x400078, one
+      PT_LOAD, filesz=memsz=0xa0, R-E, align 0x1000.
+- [x] dex: `apkbuild2/dex/classes.dex` 672 B (md5 cbe919a95b9a649a782d697dcbb97a60). dexdump of the
+      FINAL APK itself parses it: Class #0 `LMain;` PUBLIC, Superclass `Landroid_task;`,
+      methods `<init>()V` (PUBLIC CONSTRUCTOR) and `android_main(Landroid_app/IoHandler;)V`
+      (PUBLIC STATIC 0x0009).
+- [x] manifest: binary AndroidManifest.xml extracted from an aapt-built APK; `aapt dump xmltree`
+      on the FINAL apk shows manifest(version=1, package="com.punkshows.app") > application(label=
+      "Punk Shows") > entry-point(class="Main", NO package attr) > package(name,version).
+- [x] zipalign -c -v 4 on the signed apk: Verification successful (apk-launcher OK at 904).
+- [x] apksigner verify --verbose: v1/v2/v3 all true, 1 signer, RSA-2048, cert DN CN=PunkShows
+      (same key as the legacy apk: apkbuild/key.der + apkbuild/cert.pem).
+- [x] `unzip -o` of the final apk re-extracts apk-launcher with the exec bit and `file` still
+      identifies it as the aarch64 ELF.
+
+HOW-TO (reproduce):
+- aapt REQUIRES the manifest file to be named exactly `AndroidManifest.xml` and mis-parses `-o`
+  (use `-F` for the output apk): `sdk/build-tools/36.0.0/aapt package -v -M apkbuild2/mg/AndroidManifest.xml
+  -F apkbuild2/raw/m_global.apk apkbuild2/raw` → then `unzip -o` its AndroidManifest.xml = the 828-B binary blob.
+- Zip built by hand with python `zipfile` (AndroidManifest.xml first, classes.dex, then the
+  launcher STORED with external_attr = 0o755<<16), then `zipalign -v 4`.
+- apksigner/d8 need java: `export JAVA_HOME=tools/jdk/jdk-17.0.20.1+1` and
+  `PATH=$PWD/tools/jdk/jdk-17.0.20.1+1/bin:$PATH` (the SDK's java wrappers fail with "java: not found" otherwise).
+
+DEX FACTS (learned, reusable):
+- Header: bytes 0-7 = `dex\n035\0`; bytes 8-11 = u32 LE **Adler-32 of file[12:]** (verified:
+  `zlib.adler32(d[12:])` == field); bytes 12-27 = random per-build salt (covered by the checksum).
+  Any byte patch to a dex MUST recompute that field or dexdump refuses ("Bad checksum").
+- Global string table = sequence of (u8 len, chars, NUL) entries; type references are u32 ABSOLUTE
+  file offsets of the entry's len-byte. dexdump requires the entries in ascending LEXICOGRAPHIC order
+  ("Out-of-order string_ids" error), so same-length substitutions like `android/task`→`android_task`
+  are safe only if they keep that order.
+- DEAD END (do not retry): javac cannot compile `class Main extends android_task` inside
+  `package com.punkshows.app;` — `android_task` is a GLOBAL class and standard javac has no global
+  namespace ("cannot find symbol"), even though `javap -classpath gcls|cls|stub.jar android_task`
+  resolves it. d8 refuses `.java` source ("Unsupported source file type"; its inputs are dex/class/zip/jar/apk).
+  d8's `--globals/--globals-output` were never made to work for this. So the shipped dex keeps the
+  entry class GLOBAL (`LMain;`, no package prefix) and the manifest entry-point has NO package attr.
+- DEAD END (do not retry): hand-patching `apkbuild2/dex2/classes.dex` (packaged Main, super
+  `android/task`) to `android_task` → dexdump then reports the super and the android_main param
+  SWAPPED; the class/method fields do not track raw string offsets the way I assumed. Abandoned.
+
+HONEST CAVEATS (important — do not overstate):
+- No aarch64 runtime and no qemu here → the launcher was NEVER executed; it is verified
+  structurally only (file/readelf/zip/alignment).
+- The APK zip entry name for the native launcher, `apk-launcher`, is a BEST-EFFORT convention:
+  `strings -a` over aapt/aapt2/apksigner/d8/dexdump/aidl and `grep -rl` over sdk+tools found ZERO
+  occurrences of "apk-launcher"/"apk_launcher". Nothing in this SDK evidences the name the Android-Java
+  loader looks for, so the entry name is UNVERIFIED. If a device rejects the APK, the first thing to
+  try is renaming that entry (and/or adding an `image="apk-launcher"` attribute on <application> —
+  aapt round-trips such an attribute, but that only proves aapt does no schema validation).
+- The loader-ABI lookup of a GLOBAL entry-point class name (vs package-prefixed) is not device-verified.
+- Web research was unavailable this session (DuckDuckGo bot-blocked, 0 results twice), so no upstream
+  Android-Java source could be consulted.
+
 ## Modern Android APK refusal + PWA install fix (2026-10-09)
 - User report: latest Android refuses to install punkshows.apk. CONFIRMED by inspection: the
   classes.dex entry point is `android_main(android.app.Activity)` = libcore Java-app model

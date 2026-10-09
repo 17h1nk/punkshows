@@ -4,6 +4,7 @@ tools/
 .venv/
 __pycache__/
 apkbuild/
+apkbuild2/
 opencode/
 .opencode/
 *.log
