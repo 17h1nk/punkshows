@@ -140,16 +140,17 @@ removed from Android 6+, so this APK targets old Android (≤5) — on modern An
 - [x] Re-rendered: `shows.html` and webapp both show ♪ listen links.
 - [x] APK built: `punkshows.apk` 29,005 bytes, signed (route A; no clang needed — d8 replaced
   AOSP clang/aic/so). Still cannot be runtime-tested here (no device).
-- [ ] Push to GitHub — BLOCKED on token scope (2026-10-09, two causes found):
-  1. user's first try used `http://` → GitHub strips creds on plain HTTP → "No anonymous write
-    access". Must be `https://`.
-  2. With https the `github_pat_…` fine-grained PAT authenticates as 17h1nk but has NO write
-    scope: push → 403 "Permission … denied", Pages API POST /pages → 403 "Resource not
-    accessible by PAT", /repositories lists no punkshows. FIX: edit token at
-    github.com/settings/personal-access-tokens → Repositories must include punkshows, Contents=Write
-    (+ Admin & Pages:Write to enable Pages by API). SECURITY: token was pasted into chat → revoke/rotate.
-  After a scoped token: `git push https://17h1nk:TOKEN@github.com/17h1nk/punkshows.git main`
-  (origin already set; token NOT stored in .git/config), then enable Pages (main, /).
+- [x] PUSHED (2026-10-09, 2nd token): remote main = `a252664` — full site (index.html 139 KB,
+  154 thumbs, all sources) + **punkshows.apk now committed** (.gitignore line removed; 29,005 B
+  verified via raw URL). Local branch `main` (b1bb14e) keeps refresh.yml in-tree and is BEHIND the
+  remote (a252664 deleted it) — do NOT push main again while it contains the workflow (PAT lacks
+  `workflow` scope → 403 on any commit touching workflow files).
+- [ ] STILL USER-ONLY (PAT lacks pages_write + workflow scopes):
+  1. Enable Pages: github.com/17h1nk/punkshows/settings → Pages → Deploy: branch main, root /.
+     (Pages API POST → 403 "Resource not accessible by PAT"; URL still 404.)
+  2. Add `.github/workflows/refresh.yml` via web UI (paste local file) — or grant the token
+     "Workflow" write scope and I'll push it. Without it the site is static (no 6-h auto-refresh).
+  SECURITY: both pasted tokens exposed in chat → revoke the first (no-write one) at minimum.
 
 
 ## Usage
