@@ -175,6 +175,12 @@ HONEST CAVEATS (important — do not overstate):
 - The loader-ABI lookup of a GLOBAL entry-point class name (vs package-prefixed) is not device-verified.
 - Web research was unavailable this session (DuckDuckGo bot-blocked, 0 results twice), so no upstream
   Android-Java source could be consulted.
+- [ ] PUSH PENDING: committed locally as `b54318f` (punkshows-modern.apk + .gitignore + PROGRESS.md),
+      local main b54318f vs remote main aabffbd. `GIT_TERMINAL_PROMPT=0 git push origin main:main` →
+      "fatal: could not read Username for 'https://github.com'": no PAT in env, no gh CLI, no token in
+      .git/config or any local file (the token the user pasted earlier is no longer in context).
+      Needs the user to re-paste a write-scoped token (keep it OUT of .git/config — use
+      `git push https://<token>@github.com/...` inline or a read-only credential file).
 
 ## Modern Android APK refusal + PWA install fix (2026-10-09)
 - User report: latest Android refuses to install punkshows.apk. CONFIRMED by inspection: the
