@@ -1,0 +1,28 @@
+# Venues with NO official website found (app falls back to a Google Maps search link).
+# One venue per line: <venue name as it appears in the data>\t<best alternative / note>
+# Resolved 2026-10-09; see PROGRESS.md for method + confidence.
+
+Add a Ball             	# https://add-a-ball.com
+Bayside Cafe           	# https://thebaysideeverett.com/
+Cha Cha                	# https://chachaloungeseattle.com/
+Club de Sobre          	# Everett, 3021 Rucker Ave (soobar) - Facebook page only
+Karate Church          	# Bellingham - facebook karatechurchbham / bandsintown; karate-church.com is a parked domain
+Mannette Saloon        	# Bremerton, 2113 E 11th St - facebook.com/TheManetteSaloon only
+Outer Orbit            	# Tacoma arcade, 5214 S Tacoma Way (also "Outer Orbit Arcade") - FB + IG @outerorbitarcadetacoma only
+Pool House             	# only concertarchives.org/venues/pool-house; poolhousesound.com looks like an AI placeholder
+Rat House              	# Seattle - rathouse.org is an expired Squarespace account
+Strange Ways           	# Everett bar, 2610 Colby Ave - IG @strangewaysbar only
+Sweat Lodge            	# no venue found at all (searches return only sauna/wellness content)
+The Cave               	# ambiguous - maybe Cove Olympia's new "Cave" room; no site
+The District Bar       		# metalgigs.us listing only; no matching venue site found
+The Shakedown          	# SAP flyer venue - only theshakedown-band.com (a wedding band) and shakedownbarvail.com (Colorado)
+The Shoebox            	# Seattle DIY space (SAP flyers) - ma.to/setlist.fm/concertarchives only, no site
+Capitol Backstage      	# https://www.olympiafilmsociety.org
+Gravel Pit              	# Tacoma DIY house/space - Instagram @gravelpittacoma only; thegravelpit.org is a parked GoDaddy page, not a real site
+
+# Not real venues (junk strings parsed from flyer filenames) - no link should be added:
+sb
+sp
+QFC
+in tacoma
+guests
