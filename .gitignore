@@ -16,3 +16,5 @@ shows.html
 # agent notes: local-only, never uploaded to GitHub
 AGENTS.md
 PROGRESS.md
+apkbuild4/
+apkbuild5/
