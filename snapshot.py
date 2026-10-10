@@ -61,6 +61,10 @@ def pwa_files():
     for size in (192, 512):
         with open("icon-%d.png" % size, "wb") as f:
             f.write(png_icon(size))
+    # Chrome only offers "install/Add to Home Screen" once a service worker is
+    # registered on the page; an empty worker is enough and needs no fetch handler.
+    with open("sw.js", "w", encoding="utf-8") as f:
+        f.write("// empty service worker: registers scope for PWA installation\n")
 
 
 def inline_thumbs(body):
@@ -89,7 +93,8 @@ def main(web=False):
         else ("shows.html", "punk + metal shows (snapshot)", inline_thumbs(body))
     today = datetime.date.today()
     links = ("<link rel=icon href='icon.svg'>"
-             "<link rel=manifest href='manifest.webmanifest'>") if web else ""
+             "<link rel=manifest href='manifest.webmanifest'>"
+             "<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js')</script>") if web else ""
     page = f"""<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width'>
 <title>{title}</title>
 {links}
