@@ -175,12 +175,15 @@ HONEST CAVEATS (important — do not overstate):
 - The loader-ABI lookup of a GLOBAL entry-point class name (vs package-prefixed) is not device-verified.
 - Web research was unavailable this session (DuckDuckGo bot-blocked, 0 results twice), so no upstream
   Android-Java source could be consulted.
-- [ ] PUSH PENDING: committed locally as `b54318f` (punkshows-modern.apk + .gitignore + PROGRESS.md),
-      local main b54318f vs remote main aabffbd. `GIT_TERMINAL_PROMPT=0 git push origin main:main` →
-      "fatal: could not read Username for 'https://github.com'": no PAT in env, no gh CLI, no token in
-      .git/config or any local file (the token the user pasted earlier is no longer in context).
-      Needs the user to re-paste a write-scoped token (keep it OUT of .git/config — use
-      `git push https://<token>@github.com/...` inline or a read-only credential file).
+- [x] PUSHED (same session): the first attempt failed because the pasted PAT had been compacted out of
+      context and nothing local held it (`git push origin main:main` → "fatal: could not read Username").
+      The user then re-pasted a write-scoped `github_pat_...`; used INLINE only:
+      `git push "https://<token>@github.com/17h1nk/punkshows.git" main:main` → `161d7ae..318eb0b main -> main`.
+      Verified after: `git ls-remote origin` → HEAD and refs/heads/main both `318eb0b` (= local main);
+      `.git/config` still has the bare URL, NO token; `curl` of
+      `https://raw.githubusercontent.com/17h1nk/punkshows/main/punkshows-modern.apk` → HTTP 200, 8583 bytes
+      (exact APK size). Commits on remote: b54318f (APK + .gitignore + PROGRESS.md) and 318eb0b (PROGRESS note).
+      NOTE: pushing to an inline URL does not create local `refs/remotes/origin/*`; only `ls-remote` proves it.
 
 ## Modern Android APK refusal + PWA install fix (2026-10-09)
 - User report: latest Android refuses to install punkshows.apk. CONFIRMED by inspection: the
