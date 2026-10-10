@@ -7,8 +7,39 @@ import re
 import webapp  # reuse the renderer
 
 
+def png_icon(size):
+    """PNG bytes without PIL: dark tile + light '?' mark (matches icon.svg).
+    Chrome on Android ignores SVG manifest icons, so real PNGs are required
+    for the PWA to be installable."""
+    import struct
+    import zlib
+    bg, fg = (17, 17, 17), (122, 184, 255)
+    glyph = ("..XXX..", ".XXXXX.", "...X...", "...X...", "..X....", ".......", "...X...")
+    lo = size // 4
+    hi = size - lo
+    cw = ch = (hi - lo) // 7
+    raw = b""
+    for y in range(size):
+        gy = (y - lo) // ch if lo <= y < hi else -1
+        row = bytearray()
+        for x in range(size):
+            gx = (x - lo) // cw if lo <= x < hi else -1
+            on = 0 <= gy < 7 and 0 <= gx < 7 and glyph[gy][gx] == "X"
+            row += bytes(fg if on else bg)
+        raw += b"\x00" + bytes(row)
+
+    def chunk(tag, payload):
+        body = tag + payload
+        return struct.pack(">I", len(payload)) + body + struct.pack(
+            ">I", zlib.crc32(body) & 0xFFFFFFFF)
+
+    ihdr = struct.pack(">II", size, size) + bytes([8, 2, 0])  # RGB
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr)
+            + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+
+
 def pwa_files():
-    """Write manifest.webmanifest + icon.svg next to index.html so the
+    """Write manifest.webmanifest + icon.svg + PNG icons next to index.html so the
     Pages-hosted page is installable as a PWA. Paths are relative so they
     resolve under the /punkshows/ subpath (start_url "/" would hit the
     GitHub Pages root instead)."""
@@ -19,13 +50,17 @@ def pwa_files():
         "display": "minimal",
         "background_color": "#111111",
         "theme_color": "#111111",
-        "icons": [{"src": "icon.svg", "sizes": "any",
-                   "type": "image/svg+xml"}],
+        "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+                  {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+                  {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml"}],
     }
     with open("manifest.webmanifest", "w", encoding="utf-8") as f:
         json.dump(manifest, f)
     with open("icon.svg", "w", encoding="utf-8") as f:
         f.write(webapp.ICON)
+    for size in (192, 512):
+        with open("icon-%d.png" % size, "wb") as f:
+            f.write(png_icon(size))
 
 
 def inline_thumbs(body):
