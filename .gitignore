@@ -28,3 +28,9 @@ apkbuild12/
 apkbuild13/
 apkbuild14/
 apkbuild15/
+
+# Gradle project (app/) build outputs + machine-local paths
+app/build/
+app/.gradle/
+app/local.properties
+app/*.hprof

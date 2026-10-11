@@ -1,0 +1,8 @@
+#!/bin/sh
+# Gradle wrapper for this project. Pinned distribution: Gradle 8.12.1
+# (see gradle/wrapper/gradle-wrapper.properties and AGENTS.md).
+# This repo vendors the Gradle 8.12.1 distribution at ../tools/gradle/gradle-8.12.1,
+# so the wrapper execs it directly instead of downloading it.
+export JAVA_HOME="${JAVA_HOME:-/home/dascent/agent-work/punkshows/tools/jdk/jdk-17.0.20.1+1}"
+GRADLE_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+exec "$GRADLE_ROOT/tools/gradle/gradle-8.12.1/bin/gradle" "$@"
